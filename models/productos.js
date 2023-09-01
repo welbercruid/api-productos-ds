@@ -1,75 +1,78 @@
-const fs = require('node:fs');
 const config = require('../config');
-// const Joi = require('joi');
-//                                          //falta implementar joi
-// const schema = Joi.object().keys({
-//     nombre: Joi.string().required(),
-//     descripcion: Joi.string().required(),
-//     kg: Joi.number().precision(3).required(), // 1.125
-//     medidas_cm: Joi.object().keys({
-//         largo: Joi.number().precision(2).required, // 10.22
-//         ancho: Joi.number().precision(2).required, 
-//         alto: Joi.number().precision(2).required
-//     }).required(),
-//     id: Joi.number().integer().min(1).required()
-// });
+const mongoose = require('mongoose');
+//const ObjectId = mongoose.Types.ObjectId;
 
-let productos = [];
+const productoSchema = new mongoose.Schema({
+    nombre: String,
+    descripcion: String,
+    kg: Number,
+    precio: Number
+})
 
-let nextId = 1;
-//const generarNuevoId = () => id++;
+const productoModel = mongoose.model('producto', productoSchema);
 
-const add = (nombre, descripcion, kg, medidas_cm/* largo, ancho, alto */) => {
-    obj = {
-        nombre,
-        descripcion,
-        kg,
-        medidas_cm: {largo: medidas_cm.largo, ancho: medidas_cm.ancho, alto: medidas_cm.alto},
-        id: nextId ++
+const create = async (data) => {
+    try {
+        const newProducto = new productoModel(data);
+        newProducto.save();
+        return newProducto;
+    } catch (error) {
+        throw (`No se pudo crear: ${error}`);
     }
-       
-    productos.push(obj);
-    fs.writeFileSync(config.DB_NAME, JSON.stringify(productos), {flag:'w+'});
 }
 
-//muestra el array de objetos
-const mostrarTodos = () => productos;
+const all = async () => {
+    try {
+        const data = await productoModel.find({})
+        //console.log(data, "todos");
+        return data;
+    } catch (error) {
+        throw (`No se pudo obtener los productos: ${error}`);
+    }
+}
 
-//busca un producto por su key "id"
-const prodId = (id) => mostrarTodos().find(prop => prop.id === id);
-
-//buscar por index
-const prodIndex = (id) => {
-    const products = mostrarTodos();
-    return products.findIndex(producto => producto.id === id);
-};
+const byId = async (id) => {
+    try {
+        const data = await productoModel.findById(id);
+        //console.log(data, "por id");
+        return data;
+    } catch (error) {
+        throw (`No se pudo obtener el producto: ${error}`);
+    }
+}
 
 //buscar por palabra por caracteres coincidentes
-const regexNombre = (nombre) => {
-    const regex = new RegExp(nombre, 'i');
-    return mostrarTodos().filter(p => regex.test(p.nombre));
+const similNombre = async (nombre) => {
+    try {
+        const regex = new RegExp(nombre, 'i');
+        const data = await productoModel.find({nombre: regex});
+        console.log(data, "por simil");
+        return data;
+    } catch (error) {
+        throw (`No se pudo obtener el producto: ${error}`);
+    }    
 }
 
-const update = (p, body) => {// asi se puede elegir solo una prop para patch y no hay que cargar todas p/ actualizar solo una
-    for (let prop in body) {
-        p[prop] = body[prop];
+const delById = async (id) => {
+    try {
+        const data = await productoModel.findByIdAndDelete(id);
+        //console.log(data, "por id");
+        return data;
+    } catch (error) {
+        throw (`No se pudo obtener el producto: ${error}`);
     }
-    
-    fs.writeFileSync(config.DB_NAME, JSON.stringify(productos), {flag:'w+'});
-};
+}
 
-const del = (index) => {
-    productos.splice(index, 1);
-
-    fs.writeFileSync(config.DB_NAME, JSON.stringify(productos), {flag:'w+'});
-};
+const update = async (id, body) => {
+    try {
+        const data = await productoModel.findByIdAndUpdate(id, body);
+        //console.log(data, "por id");
+        return data;
+    } catch (error) {
+        throw (`No se pudo obtener el producto: ${error}`);
+    }
+}
 
 module.exports = {
-    mostrarTodos, 
-    add, 
-    prodId, 
-    prodIndex, 
-    regexNombre, 
-    update, 
-    del
+    create, all, byId, similNombre, delById, update
 }
