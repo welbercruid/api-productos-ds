@@ -1,4 +1,5 @@
-# version1
+Curso backend con node de Daniel Segovia
+## version1
 Realizar una API para manejar la entidad de productos.  
 Datos del producto: Nombre, descripción, medidas, peso.  
 Operaciones: CRUD (create, read, update, delete).  
@@ -13,5 +14,5 @@ npm i express --save
 npm i dotenv --save 
 npm i nodemon --save-dev 
 
-# version 2
+## version 2
 implementar mongoDB
